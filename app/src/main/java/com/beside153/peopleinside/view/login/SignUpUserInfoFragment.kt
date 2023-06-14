@@ -6,12 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.databinding.FragmentSignUpUserInfoBinding
 
 class SignUpUserInfoFragment : Fragment() {
     private lateinit var binding: FragmentSignUpUserInfoBinding
+
+    private var year = 1964
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -25,9 +28,17 @@ class SignUpUserInfoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        childFragmentManager.setFragmentResultListener(
+            SignUpBottomSheetFragment::class.java.simpleName,
+            this
+        ) { _, bundle ->
+            year = bundle.getInt("year")
+            binding.birthYearChoiceTextView.text = "${year}년"
+        }
+
         binding.birthYearChoiceTextView.setOnClickListener {
-            val bottomSheet = SignUpBottomSheetFragment(requireActivity())
-            bottomSheet.show(requireActivity().supportFragmentManager, bottomSheet.tag)
+            val bottomSheet = SignUpBottomSheetFragment.newInstance(year)
+            bottomSheet.show(childFragmentManager, bottomSheet.tag)
         }
 
         binding.mbtiChoiceTextView.setOnClickListener {
