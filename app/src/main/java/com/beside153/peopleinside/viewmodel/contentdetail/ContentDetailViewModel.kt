@@ -32,13 +32,22 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 
+interface Handler {
+//    fun onBookmarkClick()
+//    fun onCreateReviewClick()
+//    fun goToLoginActivity()
+//    fun onRatingChanged()
+//    fun onVerticalDotsClick()
+//    fun onCommentLikeClick()
+}
+
 @Suppress("TooManyFunctions")
 class ContentDetailViewModel(
     private val contentDetailService: ContentDetailService,
     private val bookmarkService: BookmarkService,
     private val likeToggleService: LikeToggleService,
     private val reportService: ReportService
-) : BaseViewModel() {
+) : BaseViewModel(), Handler {
 
     private val _contentDetailItem = MutableLiveData<ContentDetailModel>()
     val contentDetailItem: LiveData<ContentDetailModel> get() = _contentDetailItem
@@ -121,6 +130,7 @@ class ContentDetailViewModel(
         }
     }
 
+    @Suppress("ForbiddenComment")
     fun reportComment(reportId: Int) {
         viewModelScope.launch(exceptionHandler) {
             val response = reportService.postReport(contentId, commentIdForReport, reportId)
@@ -129,6 +139,7 @@ class ContentDetailViewModel(
                 _reportSuccessEvent.value = Event(true)
             }.suspendOnError(ErrorEnvelopeMapper) {
                 val errorEnvelope = Json.decodeFromString<ErrorEnvelope>(this.message)
+                // TODO: 메시지로 판단하는건 굉장히 변경에 취약합니다.
                 if (errorEnvelope.message == "이미 리뷰 신고가 되어있습니다.") {
                     _reportSuccessEvent.value = Event(false)
                 }
@@ -136,9 +147,11 @@ class ContentDetailViewModel(
         }
     }
 
+    @Suppress("ForbiddenComment")
     fun initAllData(didClickComment: Boolean) {
         page = 1
         viewModelScope.launch(exceptionHandler) {
+            // TODO: 이 두개만 join 하신 이유가 궁금합니다
             initRating(contentId).join()
             initWriterReview(contentId).join()
             val contentDetailItemDeferred = async { contentDetailService.getContentDetail(contentId) }
@@ -194,11 +207,10 @@ class ContentDetailViewModel(
         }
 
         return viewModelScope.launch(exceptionHandler) {
-            val contentRatingItemDeferred =
-                async { contentDetailService.getContentRating(contentId, App.prefs.getUserId()) }
-            contentRatingItem.value = contentRatingItemDeferred.await()
-            currentRating = contentRatingItem.value?.rating ?: 0f
-            currentRatingId = contentRatingItem.value?.ratingId ?: 0
+            val result = contentDetailService.getContentRating(contentId, App.prefs.getUserId())
+            contentRatingItem.value = result
+            currentRating = result.rating
+            currentRatingId = result.ratingId
         }
     }
 

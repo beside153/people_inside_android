@@ -27,6 +27,7 @@ class ContentDetailScreenAdapter(
     private val onRatingChanged: (rating: Float) -> Unit,
     private val onVerticalDotsClick: (item: ContentCommentModel) -> Unit,
     private val onCommentLikeClick: (item: ContentCommentModel) -> Unit
+    // private val handler: Handler
 ) :
     ListAdapter<ContentDetailScreenModel, ContentDetailScreenAdapter.ViewHolder>(
         ContentDetailScreenModelDiffCallback()
@@ -43,6 +44,7 @@ class ContentDetailScreenAdapter(
         }
     }
 
+    @Suppress("LongMethod", "ForbiddenComment")
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
 
@@ -54,16 +56,24 @@ class ContentDetailScreenAdapter(
 
             R.layout.item_content_detail_review -> {
                 val binding = ItemContentDetailReviewBinding.inflate(inflater, parent, false)
-                binding.ratingBar.setOnRatingBarChangeListener { ratingBar, rating, _ ->
-                    if (App.prefs.getNickname() == "익명의 핍사이더") {
-                        if (ratingBar.rating != 0f) {
-                            goToLoginActivity()
-                        }
-                        ratingBar.rating = 0f
-                    } else {
-                        ratingBar.rating = rating
+                binding.ratingBar.setOnRatingBarChangeListener { ratingBar, rating, fromUser ->
+                    if (fromUser) {
                         onRatingChanged(rating)
+                    } else {
+                        ratingBar.rating = 0f
                     }
+
+                    // TODO: 뷰모델에서 비회원여부를 판단하는게 어떨까
+                    if (App.prefs.getNickname() == "익명의 핍사이더") { // TODO: 이게 비회원 로직인지 판단하기가 어렵다.
+                        // TODO: ratingItem.rating을 0으로 다시 submit
+                        ratingBar.rating = 0f
+                        goToLoginActivity()
+                    }
+
+//                    else {
+//                        // TODO: 다시 값을 넣어주어야 할까?
+//                        ratingBar.rating = rating
+//                    }
                 }
                 binding.bookmarkImageButton.setOnClickListener {
                     onBookmarkClick()
@@ -77,6 +87,7 @@ class ContentDetailScreenAdapter(
             R.layout.item_content_detail_info -> {
                 val binding = ItemContentDetailInfoBinding.inflate(inflater, parent, false)
                 binding.contentDescriptionTextView.apply {
+                    // TODO: 초기상태에는 text가 비어있을거 같은데 어떻게 동작하는지 모르겠어요.
                     text = text.toString().replace(" ", "\u00A0")
                 }
                 ViewHolder.InfoViewHolder(binding)
@@ -89,7 +100,23 @@ class ContentDetailScreenAdapter(
 
             R.layout.item_content_detail_comment_list -> {
                 val binding = ItemContentDetailCommentListBinding.inflate(inflater, parent, false)
-                ViewHolder.CommentItemViewHolder(binding, onVerticalDotsClick, onCommentLikeClick)
+                val viewHolder = ViewHolder.CommentItemViewHolder(binding)
+
+                binding.verticalDotsImageView.setOnClickListener {
+                    val item = getItem(viewHolder.adapterPosition) as? ContentDetailScreenModel.ContentCommentItem
+                    item?.let {
+                        onVerticalDotsClick(it.contentCommentItem)
+                    }
+                }
+
+                binding.heartLikeLayout.setOnClickListener {
+                    val item = getItem(viewHolder.adapterPosition) as? ContentDetailScreenModel.ContentCommentItem
+                    item?.let {
+                        onCommentLikeClick(it.contentCommentItem)
+                    }
+                }
+
+                viewHolder
             }
 
             else -> {
@@ -142,19 +169,10 @@ class ContentDetailScreenAdapter(
         }
 
         class CommentItemViewHolder(
-            private val binding: ItemContentDetailCommentListBinding,
-            private val onVerticalDotsClick: (item: ContentCommentModel) -> Unit,
-            private val onCommentLikeClick: (item: ContentCommentModel) -> Unit
-        ) :
-            ViewHolder(binding.root) {
+            private val binding: ItemContentDetailCommentListBinding
+        ) : ViewHolder(binding.root) {
             fun bind(item: ContentDetailScreenModel.ContentCommentItem) {
                 binding.item = item.contentCommentItem
-                binding.verticalDotsImageView.setOnClickListener {
-                    onVerticalDotsClick(item.contentCommentItem)
-                }
-                binding.heartLikeLayout.setOnClickListener {
-                    onCommentLikeClick(item.contentCommentItem)
-                }
 
                 binding.descriptionTextView.apply {
                     post {
@@ -177,9 +195,7 @@ class ContentDetailScreenAdapter(
         }
 
         class NoCommentViewHolder(binding: ItemContentDetailNoCommentBinding) : ViewHolder(binding.root) {
-            fun bind() {
-                // binding 없음
-            }
+            fun bind() = Unit
         }
     }
 
