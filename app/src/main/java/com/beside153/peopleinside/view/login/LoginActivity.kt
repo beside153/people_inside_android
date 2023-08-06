@@ -8,6 +8,7 @@ import androidx.databinding.DataBindingUtil
 import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseActivity
+import com.beside153.peopleinside.common.extension.eventObserve
 import com.beside153.peopleinside.databinding.ActivityLoginBinding
 import com.beside153.peopleinside.util.EventObserver
 import com.beside153.peopleinside.util.setOpenActivityAnimation
@@ -43,18 +44,18 @@ class LoginActivity : BaseActivity() {
         KakaoSdk.init(this, getString(R.string.kakao_native_app_key))
         kakaoApi = UserApiClient.instance
 
-        loginViewModel.kakaoLoginClickEvent.observe(
-            this,
-            EventObserver {
-                kakaoLogin()
-            }
-        )
+        loginViewModel.kakaoLoginClickEvent.eventObserve(this) {
+            kakaoLogin()
+        }
 
         loginViewModel.goToSignUpEvent.observe(
             this,
             EventObserver { authToken ->
-                startActivity(SignUpActivity.newIntent(this, authToken))
-                finishAffinity()
+                startActivity(
+                    SignUpActivity.newIntent(this, authToken).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                )
             }
         )
 

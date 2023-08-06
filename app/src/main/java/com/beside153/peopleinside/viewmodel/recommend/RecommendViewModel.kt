@@ -18,6 +18,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed interface RecommendEvent {
+    data class Pick10Click(val item: Pick10Model) : RecommendEvent
+    object TopReviewClick : RecommendEvent
+}
+
 @HiltViewModel
 class RecommendViewModel @Inject constructor(
     private val mediaContentService: MediaContentService,
@@ -29,6 +34,9 @@ class RecommendViewModel @Inject constructor(
 
     private val _viewPagerList = MutableLiveData<List<Pick10ViewPagerModel>>()
     val viewPagerList: LiveData<List<Pick10ViewPagerModel>> get() = _viewPagerList
+
+    private val _recommendEvent = MutableLiveData<Event<RecommendEvent>>()
+    val recommendEvent: LiveData<Event<RecommendEvent>> = _recommendEvent
 
     private val _pick10ItemClickEvent = MutableLiveData<Event<Pick10Model>>()
     val pick10ItemClickEvent: LiveData<Event<Pick10Model>> get() = _pick10ItemClickEvent
@@ -142,7 +150,8 @@ class RecommendViewModel @Inject constructor(
     }
 
     fun onPick10ItemClick(item: Pick10Model) {
-        _pick10ItemClickEvent.value = Event(item)
+        _recommendEvent.value = Event(RecommendEvent.Pick10Click(item))
+        // _pick10ItemClickEvent.value = Event(item)
     }
 
     fun onTopReviewClick(item: Pick10Model) {

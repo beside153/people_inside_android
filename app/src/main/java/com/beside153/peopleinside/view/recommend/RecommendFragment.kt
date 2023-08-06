@@ -15,6 +15,7 @@ import androidx.viewpager2.widget.MarginPageTransformer
 import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseFragment
+import com.beside153.peopleinside.common.extension.eventObserve
 import com.beside153.peopleinside.databinding.FragmentRecommendBinding
 import com.beside153.peopleinside.model.mediacontent.Pick10Model
 import com.beside153.peopleinside.model.mediacontent.SubRankingModel
@@ -25,6 +26,7 @@ import com.beside153.peopleinside.util.setOpenActivityAnimation
 import com.beside153.peopleinside.view.contentdetail.ContentDetailActivity
 import com.beside153.peopleinside.view.contentdetail.CreateReviewActivity
 import com.beside153.peopleinside.view.login.nonmember.NonMemberLoginActivity
+import com.beside153.peopleinside.viewmodel.recommend.RecommendEvent
 import com.beside153.peopleinside.viewmodel.recommend.RecommendViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -155,6 +157,18 @@ class RecommendFragment : BaseFragment() {
 
         recommendViewModel.subRankingList.observe(viewLifecycleOwner) { list ->
             rankingAdpater.submitList(list)
+        }
+
+        recommendViewModel.recommendEvent.eventObserve(viewLifecycleOwner) {
+            when (it) {
+                is RecommendEvent.Pick10Click -> {
+                    // TODO
+                    it.item
+                }
+                RecommendEvent.TopReviewClick -> {
+                    // TODO
+                }
+            }
         }
 
         recommendViewModel.subRankingArrowClickEvent.observe(
