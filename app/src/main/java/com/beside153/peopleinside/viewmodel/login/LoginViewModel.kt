@@ -3,14 +3,14 @@ package com.beside153.peopleinside.viewmodel.login
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
-import com.beside153.peopleinside.service.AuthService
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,14 +23,21 @@ sealed interface LoginEvent {
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authService: AuthService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     private val _loginEvent = MutableLiveData<Event<LoginEvent>>()
     val loginEvent: LiveData<Event<LoginEvent>> = _loginEvent
 
     private var authToken = ""
+
+    init {
+        viewModelScope.launch {
+            userRepository.userFlow.collectLatest {
+            }
+        }
+    }
 
     fun setAuthToken(token: String) {
         authToken = token
@@ -56,20 +63,8 @@ class LoginViewModel @Inject constructor(
         }
 
         viewModelScope.launch(ceh) {
-            val response = authService.postLoginKakao("Bearer $authToken")
-            val jwtToken = response.jwtToken
-            val user = response.user
-
-            App.prefs.setJwtToken(jwtToken)
-            App.prefs.setUserId(user.userId)
-            App.prefs.setNickname(user.nickname)
-            App.prefs.setMbti(user.mbti)
-            App.prefs.setBirth(user.birth)
-            App.prefs.setGender(user.sex)
-            App.prefs.setIsMember(true)
-
+            val user = userRepository.loginWithKakao(authToken)
             val onBoardingCompleted = userService.getOnBoardingCompleted(user.userId)
-
             if (onBoardingCompleted) {
                 _loginEvent.value = Event(LoginEvent.OnBoardingCompleted(true))
             } else {
