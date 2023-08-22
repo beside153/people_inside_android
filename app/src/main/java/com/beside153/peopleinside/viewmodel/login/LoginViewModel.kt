@@ -10,7 +10,6 @@ import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,13 +30,6 @@ class LoginViewModel @Inject constructor(
     val loginEvent: LiveData<Event<LoginEvent>> = _loginEvent
 
     private var authToken = ""
-
-    init {
-        viewModelScope.launch {
-            userRepository.userFlow.collectLatest {
-            }
-        }
-    }
 
     fun setAuthToken(token: String) {
         authToken = token

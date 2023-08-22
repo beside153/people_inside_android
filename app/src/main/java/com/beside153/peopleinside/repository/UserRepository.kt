@@ -26,6 +26,7 @@ class UserRepository @Inject constructor(
 ) {
 
     private val _userFlow = MutableSharedFlow<User>(
+        replay = 1,
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )

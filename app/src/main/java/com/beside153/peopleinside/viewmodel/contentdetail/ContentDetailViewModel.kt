@@ -3,7 +3,6 @@ package com.beside153.peopleinside.viewmodel.contentdetail
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
 import com.beside153.peopleinside.model.mediacontent.ContentDetailModel
@@ -11,6 +10,8 @@ import com.beside153.peopleinside.model.mediacontent.rating.ContentRatingModel
 import com.beside153.peopleinside.model.mediacontent.rating.ContentRatingRequest
 import com.beside153.peopleinside.model.mediacontent.review.ContentCommentModel
 import com.beside153.peopleinside.model.mediacontent.review.ContentReviewModel
+import com.beside153.peopleinside.repository.User
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.mediacontent.BookmarkService
 import com.beside153.peopleinside.service.mediacontent.MediaContentService
 import com.beside153.peopleinside.service.mediacontent.RatingService
@@ -21,6 +22,7 @@ import com.beside153.peopleinside.view.contentdetail.ContentDetailScreenAdapter.
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,7 +39,8 @@ class ContentDetailViewModel @Inject constructor(
     private val mediaContentService: MediaContentService,
     private val ratingService: RatingService,
     private val reviewService: ReviewService,
-    private val bookmarkService: BookmarkService
+    private val bookmarkService: BookmarkService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     private val _contentDetailItem = MutableLiveData<ContentDetailModel>()
@@ -59,6 +62,14 @@ class ContentDetailViewModel @Inject constructor(
     private var contentRatingItem = ContentRatingModel(1, 0, 0f)
     private var writerReviewItem = ContentReviewModel(0, 0, "", 0, null)
     private var commentList = listOf<ContentCommentModel>()
+
+    private lateinit var user: User
+
+    init {
+        viewModelScope.launch {
+            userRepository.userFlow.collectLatest { user = it }
+        }
+    }
 
     fun setContentId(id: Int) {
         contentId = id
@@ -171,7 +182,7 @@ class ContentDetailViewModel @Inject constructor(
             }
         }
         viewModelScope.launch(ceh) {
-            writerReviewItem = reviewService.getWriterReview(contentId, App.prefs.getUserId())
+            writerReviewItem = reviewService.getWriterReview(contentId, user.userId)
             writerHasReview = true
         }
     }
@@ -193,7 +204,7 @@ class ContentDetailViewModel @Inject constructor(
             }
         }
         viewModelScope.launch(ceh) {
-            contentRatingItem = ratingService.getContentRating(contentId, App.prefs.getUserId())
+            contentRatingItem = ratingService.getContentRating(contentId, user.userId)
             currentRating = contentRatingItem.rating
             currentRatingId = contentRatingItem.ratingId
         }

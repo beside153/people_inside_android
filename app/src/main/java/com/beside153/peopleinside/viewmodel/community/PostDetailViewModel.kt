@@ -3,16 +3,18 @@ package com.beside153.peopleinside.viewmodel.community
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.model.common.CreateContentRequest
 import com.beside153.peopleinside.model.community.comment.CommunityCommentModel
 import com.beside153.peopleinside.model.community.post.CommunityPostModel
+import com.beside153.peopleinside.repository.User
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.community.CommunityCommentService
 import com.beside153.peopleinside.service.community.CommunityPostService
 import com.beside153.peopleinside.util.Event
 import com.beside153.peopleinside.view.community.PostDetailScreenAdapter.PostDetailScreenModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -41,7 +43,8 @@ sealed interface PostDetailEvent {
 @HiltViewModel
 class PostDetailViewModel @Inject constructor(
     private val communityPostService: CommunityPostService,
-    private val communityCommentService: CommunityCommentService
+    private val communityCommentService: CommunityCommentService,
+    private val userRepository: UserRepository
 ) : BaseViewModel(), PostDetailViewModelHandler {
 
     val commentText = MutableLiveData("")
@@ -66,6 +69,14 @@ class PostDetailViewModel @Inject constructor(
     private var selectedCommentContent = ""
 
     override var postMbtiList = listOf<String>()
+
+    private lateinit var user: User
+
+    init {
+        viewModelScope.launch {
+            userRepository.userFlow.collectLatest { user = it }
+        }
+    }
 
     fun setPostId(id: Long) {
         postId = id
@@ -124,11 +135,11 @@ class PostDetailViewModel @Inject constructor(
     }
 
     fun onPostVerticalDotsClick() {
-        if (!App.prefs.getIsMember()) {
+        if (!user.isMember) {
             _postDetailEvent.value = Event(PostDetailEvent.GoToNonMemberLogin)
             return
         }
-        if (App.prefs.getUserId().toLong() == (postDetailItem?.author?.userId ?: 1L)) {
+        if (user.userId.toLong() == (postDetailItem?.author?.userId ?: 1L)) {
             _postDetailEvent.value = Event(PostDetailEvent.PostDotsClick(true))
             return
         }
@@ -136,14 +147,14 @@ class PostDetailViewModel @Inject constructor(
     }
 
     override fun onCommentDotsClick(item: CommunityCommentModel) {
-        if (!App.prefs.getIsMember()) {
+        if (!user.isMember) {
             _postDetailEvent.value = Event(PostDetailEvent.GoToNonMemberLogin)
             return
         }
 
         selectedCommentId = item.commentId
         selectedCommentContent = item.content
-        if (App.prefs.getUserId().toLong() == item.author.userId) {
+        if (user.userId.toLong() == item.author.userId) {
             _postDetailEvent.value = Event(PostDetailEvent.CommentDotsClick(true))
             return
         }
