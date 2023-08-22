@@ -39,7 +39,7 @@ class LoginViewModel @Inject constructor(
         _loginEvent.value = Event(LoginEvent.KakaoLoginClick)
     }
 
-    fun peopleInsideLogin() {
+    fun peopleInsideLogin(email: String) {
         val ceh = CoroutineExceptionHandler { context, t ->
             when (t) {
                 is ApiException -> {
@@ -55,7 +55,7 @@ class LoginViewModel @Inject constructor(
         }
 
         viewModelScope.launch(ceh) {
-            val user = userRepository.loginWithKakao(authToken)
+            val user = userRepository.loginWithKakao(authToken, email)
             val onBoardingCompleted = userService.getOnBoardingCompleted(user.userId)
             if (onBoardingCompleted) {
                 _loginEvent.value = Event(LoginEvent.OnBoardingCompleted(true))

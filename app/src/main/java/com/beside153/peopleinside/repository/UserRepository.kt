@@ -1,5 +1,6 @@
 package com.beside153.peopleinside.repository
 
+import com.beside153.peopleinside.App
 import com.beside153.peopleinside.model.auth.AuthRegisterRequest
 import com.beside153.peopleinside.service.AuthService
 import com.beside153.peopleinside.util.PreferenceUtil
@@ -49,8 +50,7 @@ class UserRepository @Inject constructor(
             updateUser(user)
         } else {
             // 비회원(게스트) 상태일 경우, 게스트 유저정보로 업데이트
-            val guestUser = User(guestUserId, guestUserJwtToken, "익명의 핍사이더", mbti, birth, gender, isMember = false)
-            updateUser(guestUser)
+            updateUserToGuest(mbti)
         }
     }
 
@@ -58,8 +58,56 @@ class UserRepository @Inject constructor(
         _userFlow.tryEmit(user)
     }
 
-    suspend fun loginWithKakao(authToken: String): User {
+    fun updateUserToGuest(mbti: String) {
+        val guestUser = User(guestUserId, guestUserJwtToken, "익명의 핍사이더", mbti, "", "", isMember = false)
+        _userFlow.tryEmit(guestUser)
+
+        // TODO: 앱 전체 userRepository로 수정 후 아래 코드를 삭제
+        App.prefs.setJwtToken(guestUserJwtToken)
+        App.prefs.setUserId(guestUserId)
+        App.prefs.setNickname("익명의 핍사이더")
+        App.prefs.setMbti(mbti)
+        App.prefs.setIsMember(false)
+    }
+
+    suspend fun loginWithKakao(authToken: String, email: String): User {
         val response = authService.postLoginKakao("Bearer $authToken")
+
+        val jwtToken = response.jwtToken
+        val userInfo = response.user
+        val userId = userInfo.userId
+        val nickname = userInfo.nickname
+        val mbti = userInfo.mbti
+        val birth = userInfo.birth
+        val gender = userInfo.sex
+
+        // TODO: 앱 전체 userRepository로 수정 후 아래 코드를 삭제
+        prefs.setJwtToken(jwtToken)
+        prefs.setUserId(userInfo.userId)
+        prefs.setNickname(userInfo.nickname)
+        prefs.setMbti(userInfo.mbti)
+        prefs.setBirth(userInfo.birth)
+        prefs.setGender(userInfo.sex)
+        prefs.setEmail(email)
+        prefs.setIsMember(true)
+
+        val user = User(userId, jwtToken, nickname, mbti, birth, gender, email, isMember = true)
+        updateUser(user)
+
+        return user
+    }
+
+    suspend fun postAuthRegister(
+        authToken: String,
+        selectedNickname: String,
+        selectedMbti: String,
+        selectedBirth: String,
+        selectedGender: String
+    ): User {
+        val response = authService.postAuthRegister(
+            "Bearer $authToken",
+            AuthRegisterRequest("kakao", selectedNickname, selectedMbti, selectedBirth, selectedGender)
+        )
 
         val jwtToken = response.jwtToken
         val userInfo = response.user
@@ -83,40 +131,6 @@ class UserRepository @Inject constructor(
         updateUser(user)
 
         return user
-    }
-
-    suspend fun postAuthRegister(
-        authToken: String,
-        selectedNickname: String,
-        selectedMbti: String,
-        selectedBirth: String,
-        selectedGender: String
-    ) {
-        val response = authService.postAuthRegister(
-            "Bearer $authToken",
-            AuthRegisterRequest("kakao", selectedNickname, selectedMbti, selectedBirth, selectedGender)
-        )
-
-        val jwtToken = response.jwtToken
-        val userInfo = response.user
-        val userId = userInfo.userId
-        val nickname = userInfo.nickname
-        val mbti = userInfo.mbti
-        val birth = userInfo.birth
-        val gender = userInfo.sex
-        val email = prefs.getEmail()
-
-        val user = User(userId, jwtToken, nickname, mbti, birth, gender, email, isMember = true)
-        updateUser(user)
-
-        // TODO: 앱 전체 userRepository로 수정 후 아래 코드를 삭제
-        prefs.setJwtToken(jwtToken)
-        prefs.setUserId(userInfo.userId)
-        prefs.setNickname(userInfo.nickname)
-        prefs.setMbti(userInfo.mbti)
-        prefs.setBirth(userInfo.birth)
-        prefs.setGender(userInfo.sex)
-        prefs.setIsMember(true)
     }
 
     companion object {

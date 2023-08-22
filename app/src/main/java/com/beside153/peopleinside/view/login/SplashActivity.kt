@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.activity.viewModels
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseActivity
 import com.beside153.peopleinside.common.extension.eventObserve
@@ -52,7 +51,7 @@ class SplashActivity : BaseActivity() {
                 is SplashEvent.OnBoardingCompleted -> {
                     if (it.isCompleted) {
                         Handler(Looper.getMainLooper()).postDelayed({
-                            if (App.prefs.getUserId() == 0 || App.prefs.getNickname().isEmpty()) {
+                            if (it.user.userId == 0 || it.user.nickname.isEmpty()) {
                                 startActivity(LoginActivity.newIntent(this))
                                 finish()
                                 return@postDelayed

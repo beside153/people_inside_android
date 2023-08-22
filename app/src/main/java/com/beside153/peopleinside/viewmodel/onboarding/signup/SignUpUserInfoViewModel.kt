@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
+import com.beside153.peopleinside.repository.User
 import com.beside153.peopleinside.repository.UserRepository
-import com.beside153.peopleinside.service.AuthService
 import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,13 +17,12 @@ import javax.inject.Inject
 sealed interface SignUpUserInfoEvent {
     object BirthYearClick : SignUpUserInfoEvent
     object MbtiChoiceClick : SignUpUserInfoEvent
-    object SignUpButtonClick : SignUpUserInfoEvent
+    data class SignUpButtonClick(val user: User) : SignUpUserInfoEvent
 }
 
 @HiltViewModel
 class SignUpUserInfoViewModel @Inject constructor(
     private val userService: UserService,
-    private val authService: AuthService,
     private val userRepository: UserRepository
 ) : BaseViewModel() {
     val nickname = MutableLiveData("")
@@ -115,8 +114,8 @@ class SignUpUserInfoViewModel @Inject constructor(
             val birth = (_selectedYear.value ?: 0).toString()
             val gender = _selectedGender.value ?: ""
 
-            userRepository.postAuthRegister(authToken, nickname, mbti, birth, gender)
-            _signUpUserInfoEvent.value = Event(SignUpUserInfoEvent.SignUpButtonClick)
+            val user = userRepository.postAuthRegister(authToken, nickname, mbti, birth, gender)
+            _signUpUserInfoEvent.value = Event(SignUpUserInfoEvent.SignUpButtonClick(user))
         }
     }
 

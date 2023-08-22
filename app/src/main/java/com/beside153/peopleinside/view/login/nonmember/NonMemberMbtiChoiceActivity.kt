@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.GridLayoutManager
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseActivity
 import com.beside153.peopleinside.common.extension.eventObserve
@@ -18,7 +17,9 @@ import com.beside153.peopleinside.util.setOpenActivityAnimation
 import com.beside153.peopleinside.view.MainActivity
 import com.beside153.peopleinside.view.common.MbtiChoiceScreenAdapter
 import com.beside153.peopleinside.viewmodel.login.nonmember.NonMemberMbtiChoiceViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class NonMemberMbtiChoiceActivity : BaseActivity() {
     private lateinit var binding: ActivityNonMemberMbtiChoiceBinding
     private val mbtiAdapter = MbtiChoiceScreenAdapter(::onMbtiItemClick)
@@ -48,12 +49,6 @@ class NonMemberMbtiChoiceActivity : BaseActivity() {
         }
 
         mbtiChoiceViewmodel.completeButtonClickEvent.eventObserve(this) { mbti ->
-            App.prefs.setJwtToken(getString(R.string.nonmember_jwt_token))
-            App.prefs.setUserId(1)
-            App.prefs.setNickname(getString(R.string.nonmember_nickname))
-            App.prefs.setMbti(mbti.uppercase())
-            App.prefs.setIsMember(false)
-
             startActivity(
                 MainActivity.newIntent(this, false).apply {
                     flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK

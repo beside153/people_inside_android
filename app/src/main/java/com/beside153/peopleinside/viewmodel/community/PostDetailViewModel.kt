@@ -195,4 +195,10 @@ class PostDetailViewModel @Inject constructor(
             _postDetailEvent.value = Event(PostDetailEvent.CompleteReport)
         }
     }
+
+    fun onCommentEditTextFocused() {
+        if (!user.isMember) {
+            _postDetailEvent.value = Event(PostDetailEvent.GoToNonMemberLogin)
+        }
+    }
 }

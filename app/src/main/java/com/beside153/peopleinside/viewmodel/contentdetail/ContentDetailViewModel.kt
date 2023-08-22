@@ -32,7 +32,8 @@ sealed interface ContentDetailEvent {
     object VerticalDotsClick : ContentDetailEvent
     data class CreateReview(val contentId: Int, val content: String) : ContentDetailEvent
     data class ReportSuccess(val isSuccess: Boolean) : ContentDetailEvent
-    data class CreateRating(val item: ContentRatingModel) : ContentDetailEvent
+    data class CreateRating(val item: ContentRatingModel, val user: User) : ContentDetailEvent
+    object GuestLogin : ContentDetailEvent
 }
 
 @HiltViewModel
@@ -90,11 +91,20 @@ class ContentDetailViewModel @Inject constructor(
     }
 
     fun onVerticalDotsClick(item: ContentCommentModel) {
+        if (!user.isMember) {
+            _contentDetailEvent.value = Event(ContentDetailEvent.GuestLogin)
+            return
+        }
         _contentDetailEvent.value = Event(ContentDetailEvent.VerticalDotsClick)
         commentIdForReport = item.reviewId
     }
 
     fun onCommentLikeClick(item: ContentCommentModel) {
+        if (!user.isMember) {
+            _contentDetailEvent.value = Event(ContentDetailEvent.GuestLogin)
+            return
+        }
+
         viewModelScope.launch(exceptionHandler) {
             val updatedList: List<ContentCommentModel>?
             if (item.like) {
@@ -220,7 +230,7 @@ class ContentDetailViewModel @Inject constructor(
                     ratingService.postContentRating(contentId, ContentRatingRequest(rating))
                 currentRating = rating
                 currentRatingId = contentRatingItem.ratingId
-                _contentDetailEvent.value = Event(ContentDetailEvent.CreateRating(contentRatingItem))
+                _contentDetailEvent.value = Event(ContentDetailEvent.CreateRating(contentRatingItem, user))
                 return@launch
             }
             val currentRatingHasValue = 0 < currentRating && currentRating <= MAX_RATING
@@ -237,6 +247,10 @@ class ContentDetailViewModel @Inject constructor(
     }
 
     fun onBookmarkClick() {
+        if (!user.isMember) {
+            _contentDetailEvent.value = Event(ContentDetailEvent.GuestLogin)
+            return
+        }
         bookmarked = bookmarked == false
         viewModelScope.launch(exceptionHandler) {
             initRating()
@@ -263,6 +277,10 @@ class ContentDetailViewModel @Inject constructor(
     }
 
     fun onCreateReviewClick() {
+        if (!user.isMember) {
+            _contentDetailEvent.value = Event(ContentDetailEvent.GuestLogin)
+            return
+        }
         if (!writerHasReview) {
             _contentDetailEvent.value = Event(ContentDetailEvent.CreateReview(contentId, ""))
         } else {

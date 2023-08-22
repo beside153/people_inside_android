@@ -11,7 +11,6 @@ import androidx.activity.viewModels
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseActivity
 import com.beside153.peopleinside.common.extension.eventObserve
@@ -62,9 +61,8 @@ class PostDetailActivity : BaseActivity() {
         }
 
         binding.commentEditText.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && !App.prefs.getIsMember()) {
-                startActivity(NonMemberLoginActivity.newIntent(this))
-                setOpenActivityAnimation()
+            if (hasFocus) {
+                postDetailViewModel.onCommentEditTextFocused()
             }
         }
 

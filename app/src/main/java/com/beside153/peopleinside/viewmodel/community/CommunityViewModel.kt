@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 sealed interface CommunityEvent {
     object SearchBarClick : CommunityEvent
-    object WritePostClick : CommunityEvent
+    data class WritePostClick(val isMember: Boolean) : CommunityEvent
     data class PostItemClick(val postId: Long) : CommunityEvent
 }
 
@@ -77,7 +77,7 @@ class CommunityViewModel @Inject constructor(
     }
 
     fun onWritePostClick() {
-        _communityEvent.value = Event(CommunityEvent.WritePostClick)
+        _communityEvent.value = Event(CommunityEvent.WritePostClick(user.isMember))
     }
 
     fun onPostItemClick(item: CommunityPostModel) {

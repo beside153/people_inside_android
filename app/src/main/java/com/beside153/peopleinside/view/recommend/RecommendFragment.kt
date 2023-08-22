@@ -12,7 +12,6 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.viewpager2.widget.MarginPageTransformer
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseFragment
 import com.beside153.peopleinside.common.extension.eventObserve
@@ -160,12 +159,17 @@ class RecommendFragment : BaseFragment() {
                 }
 
                 RecommendEvent.MbtiImgClick -> {
-                    if (!App.prefs.getIsMember()) {
-                        startActivity(NonMemberLoginActivity.newIntent(requireActivity()))
-                        requireActivity().setOpenActivityAnimation()
-                        return@eventObserve
-                    }
                     findNavController().navigate(R.id.myPageFragment)
+                }
+
+                RecommendEvent.GuestLogin -> {
+                    startActivity(NonMemberLoginActivity.newIntent(requireActivity()))
+                    requireActivity().setOpenActivityAnimation()
+                }
+
+                is RecommendEvent.GoToWriteReviewClick -> {
+                    activityResultLauncher.launch(CreateReviewActivity.newIntent(requireActivity(), it.contentId, ""))
+                    requireActivity().setOpenActivityAnimation()
                 }
             }
         }
@@ -197,22 +201,11 @@ class RecommendFragment : BaseFragment() {
     }
 
     private fun onBookmarkClick(item: Pick10Model) {
-        if (!App.prefs.getIsMember()) {
-            startActivity(NonMemberLoginActivity.newIntent(requireActivity()))
-            requireActivity().setOpenActivityAnimation()
-            return
-        }
         recommendViewModel.onBookmarkClick(item)
     }
 
     private fun onGoToWriteReviewClick(item: Pick10Model) {
-        if (!App.prefs.getIsMember()) {
-            startActivity(NonMemberLoginActivity.newIntent(requireActivity()))
-            requireActivity().setOpenActivityAnimation()
-            return
-        }
-        activityResultLauncher.launch(CreateReviewActivity.newIntent(requireActivity(), item.contentId, ""))
-        requireActivity().setOpenActivityAnimation()
+        recommendViewModel.onGoToWriteReviewClick(item)
     }
 
     private fun onRefreshClick() {

@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
 import com.beside153.peopleinside.repository.UserRepository
-import com.beside153.peopleinside.service.AuthService
 import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +21,6 @@ sealed interface NonMemberLoginEvent {
 
 @HiltViewModel
 class NonMemberLoginViewModel @Inject constructor(
-    private val authService: AuthService,
     private val userService: UserService,
     private val userRepository: UserRepository
 ) : BaseViewModel() {
@@ -40,7 +38,7 @@ class NonMemberLoginViewModel @Inject constructor(
         _nonMemberLoginEvent.value = Event(NonMemberLoginEvent.KakaoLoginClick)
     }
 
-    fun peopleInsideLogin() {
+    fun peopleInsideLogin(email: String) {
         val ceh = CoroutineExceptionHandler { context, t ->
             when (t) {
                 is ApiException -> {
@@ -56,7 +54,7 @@ class NonMemberLoginViewModel @Inject constructor(
         }
 
         viewModelScope.launch(ceh) {
-            val user = userRepository.loginWithKakao(authToken)
+            val user = userRepository.loginWithKakao(authToken, email)
             val onBoardingCompleted = userService.getOnBoardingCompleted(user.userId)
             if (onBoardingCompleted) {
                 _nonMemberLoginEvent.value = Event(NonMemberLoginEvent.OnBoardingCompleted(true))
