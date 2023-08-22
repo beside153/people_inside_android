@@ -21,8 +21,8 @@ data class User(
 
 @Singleton
 class UserRepository @Inject constructor(
-    private val authService: AuthService,
-    private val prefs: PreferenceUtil
+    private val prefs: PreferenceUtil,
+    private val authService: AuthService
 ) {
 
     private val _userFlow = MutableSharedFlow<User>(
@@ -69,7 +69,7 @@ class UserRepository @Inject constructor(
         val gender = userInfo.sex
         val email = prefs.getEmail()
 
-        // 앱 전체 userRepository로 수정 후 아래 코드를 삭제
+        // TODO: 앱 전체 userRepository로 수정 후 아래 코드를 삭제
         prefs.setJwtToken(jwtToken)
         prefs.setUserId(userInfo.userId)
         prefs.setNickname(userInfo.nickname)

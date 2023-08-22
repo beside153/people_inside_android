@@ -10,6 +10,7 @@ import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.community.CommunityPostService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,7 +36,7 @@ class CommunityViewModel @Inject constructor(
     private lateinit var user: User
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             userRepository.userFlow.collectLatest { user = it }
         }
     }

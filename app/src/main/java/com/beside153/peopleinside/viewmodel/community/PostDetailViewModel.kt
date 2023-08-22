@@ -14,6 +14,7 @@ import com.beside153.peopleinside.service.community.CommunityPostService
 import com.beside153.peopleinside.util.Event
 import com.beside153.peopleinside.view.community.PostDetailScreenAdapter.PostDetailScreenModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -73,7 +74,7 @@ class PostDetailViewModel @Inject constructor(
     private lateinit var user: User
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             userRepository.userFlow.collectLatest { user = it }
         }
     }

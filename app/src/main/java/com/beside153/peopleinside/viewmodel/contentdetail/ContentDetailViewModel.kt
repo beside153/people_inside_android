@@ -21,6 +21,7 @@ import com.beside153.peopleinside.util.roundToHalf
 import com.beside153.peopleinside.view.contentdetail.ContentDetailScreenAdapter.ContentDetailScreenModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -66,7 +67,7 @@ class ContentDetailViewModel @Inject constructor(
     private lateinit var user: User
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             userRepository.userFlow.collectLatest { user = it }
         }
     }
