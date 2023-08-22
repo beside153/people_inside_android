@@ -1,5 +1,6 @@
 package com.beside153.peopleinside.repository
 
+import com.beside153.peopleinside.model.auth.AuthRegisterRequest
 import com.beside153.peopleinside.service.AuthService
 import com.beside153.peopleinside.util.PreferenceUtil
 import kotlinx.coroutines.channels.BufferOverflow
@@ -82,6 +83,40 @@ class UserRepository @Inject constructor(
         updateUser(user)
 
         return user
+    }
+
+    suspend fun postAuthRegister(
+        authToken: String,
+        selectedNickname: String,
+        selectedMbti: String,
+        selectedBirth: String,
+        selectedGender: String
+    ) {
+        val response = authService.postAuthRegister(
+            "Bearer $authToken",
+            AuthRegisterRequest("kakao", selectedNickname, selectedMbti, selectedBirth, selectedGender)
+        )
+
+        val jwtToken = response.jwtToken
+        val userInfo = response.user
+        val userId = userInfo.userId
+        val nickname = userInfo.nickname
+        val mbti = userInfo.mbti
+        val birth = userInfo.birth
+        val gender = userInfo.sex
+        val email = prefs.getEmail()
+
+        val user = User(userId, jwtToken, nickname, mbti, birth, gender, email, isMember = true)
+        updateUser(user)
+
+        // TODO: 앱 전체 userRepository로 수정 후 아래 코드를 삭제
+        prefs.setJwtToken(jwtToken)
+        prefs.setUserId(userInfo.userId)
+        prefs.setNickname(userInfo.nickname)
+        prefs.setMbti(userInfo.mbti)
+        prefs.setBirth(userInfo.birth)
+        prefs.setGender(userInfo.sex)
+        prefs.setIsMember(true)
     }
 
     companion object {

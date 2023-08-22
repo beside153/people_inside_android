@@ -3,10 +3,9 @@ package com.beside153.peopleinside.viewmodel.onboarding.signup
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
-import com.beside153.peopleinside.model.auth.AuthRegisterRequest
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.AuthService
 import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.util.Event
@@ -24,7 +23,8 @@ sealed interface SignUpUserInfoEvent {
 @HiltViewModel
 class SignUpUserInfoViewModel @Inject constructor(
     private val userService: UserService,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
     val nickname = MutableLiveData("")
 
@@ -110,28 +110,12 @@ class SignUpUserInfoViewModel @Inject constructor(
         }
 
         viewModelScope.launch(ceh) {
-            val response = authService.postAuthRegister(
-                "Bearer $authToken",
-                AuthRegisterRequest(
-                    "kakao",
-                    nickname.value ?: "",
-                    _selectedMbti.value?.lowercase() ?: "",
-                    (_selectedYear.value ?: 0).toString(),
-                    _selectedGender.value ?: ""
-                )
-            )
+            val nickname = nickname.value ?: ""
+            val mbti = _selectedMbti.value?.lowercase() ?: ""
+            val birth = (_selectedYear.value ?: 0).toString()
+            val gender = _selectedGender.value ?: ""
 
-            val jwtToken = response.jwtToken
-            val user = response.user
-
-            App.prefs.setJwtToken(jwtToken)
-            App.prefs.setUserId(user.userId)
-            App.prefs.setNickname(user.nickname)
-            App.prefs.setMbti(user.mbti)
-            App.prefs.setBirth(user.birth)
-            App.prefs.setGender(user.sex)
-            App.prefs.setIsMember(true)
-
+            userRepository.postAuthRegister(authToken, nickname, mbti, birth, gender)
             _signUpUserInfoEvent.value = Event(SignUpUserInfoEvent.SignUpButtonClick)
         }
     }
