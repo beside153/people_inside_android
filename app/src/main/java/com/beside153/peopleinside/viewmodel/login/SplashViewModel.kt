@@ -27,7 +27,7 @@ sealed interface SplashEvent {
     object UpdateApp : SplashEvent
     object GoToPlayStore : SplashEvent
     object NoUserInfo : SplashEvent
-    data class OnBoardingCompleted(val isCompleted: Boolean, val user: User) : SplashEvent
+    data class OnBoardingCompleted(val isOnBoardingCompleted: Boolean, val isMember: Boolean) : SplashEvent
 }
 
 @HiltViewModel
@@ -88,10 +88,10 @@ class SplashViewModel @Inject constructor(
             prefs.setReportList(Json.encodeToString(allReportList))
 
             if (onBoardingCompleted) {
-                _splashEvent.value = Event(SplashEvent.OnBoardingCompleted(true, user))
+                _splashEvent.value = Event(SplashEvent.OnBoardingCompleted(true, user.isMember))
                 return@launch
             }
-            _splashEvent.value = Event(SplashEvent.OnBoardingCompleted(false, user))
+            _splashEvent.value = Event(SplashEvent.OnBoardingCompleted(false, user.isMember))
         }
     }
 

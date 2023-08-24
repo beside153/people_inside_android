@@ -39,6 +39,7 @@ class SplashActivity : BaseActivity() {
         splashViewModel.splashEvent.eventObserve(this) {
             when (it) {
                 SplashEvent.UpdateApp -> showNeedUpdateDialog()
+
                 SplashEvent.GoToPlayStore -> {
                     val intent = Intent(Intent.ACTION_VIEW)
                     intent.data = Uri.parse("https://play.google.com/store/apps/details?id=com.beside153.peopleinside")
@@ -46,9 +47,10 @@ class SplashActivity : BaseActivity() {
                 }
 
                 SplashEvent.NoUserInfo -> showNoUserInfoDialog()
+
                 is SplashEvent.OnBoardingCompleted -> {
-                    if (it.isCompleted) {
-                        if (it.user.userId == 1 || it.user.nickname.isEmpty()) {
+                    if (it.isOnBoardingCompleted) {
+                        if (it.isMember) {
                             startActivity(LoginActivity.newIntent(this))
                             finish()
                             return@eventObserve
