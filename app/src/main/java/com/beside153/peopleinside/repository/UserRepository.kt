@@ -2,6 +2,7 @@ package com.beside153.peopleinside.repository
 
 import com.beside153.peopleinside.App
 import com.beside153.peopleinside.model.auth.AuthRegisterRequest
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.service.AuthService
 import com.beside153.peopleinside.util.PreferenceUtil
 import kotlinx.coroutines.channels.BufferOverflow
@@ -9,17 +10,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 import javax.inject.Singleton
-
-data class User(
-    val userId: Int,
-    val jwtToken: String,
-    val nickname: String,
-    val mbti: String,
-    val birth: String,
-    val gender: String,
-    val email: String? = "",
-    val isMember: Boolean
-)
 
 @Singleton
 class UserRepository @Inject constructor(

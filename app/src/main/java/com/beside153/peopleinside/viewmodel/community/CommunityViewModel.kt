@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.beside153.peopleinside.base.BaseViewModel
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.model.community.post.CommunityPostModel
-import com.beside153.peopleinside.repository.User
 import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.community.CommunityPostService
 import com.beside153.peopleinside.util.Event

@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.beside153.peopleinside.BuildConfig
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
-import com.beside153.peopleinside.repository.User
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.AppVersionService
 import com.beside153.peopleinside.service.ReportService

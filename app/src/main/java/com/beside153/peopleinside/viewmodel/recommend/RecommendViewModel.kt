@@ -6,10 +6,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.beside153.peopleinside.base.BaseViewModel
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.model.mediacontent.Pick10Model
 import com.beside153.peopleinside.model.mediacontent.RatingBattleModel
 import com.beside153.peopleinside.model.mediacontent.SubRankingModel
-import com.beside153.peopleinside.repository.User
 import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.mediacontent.BookmarkService
 import com.beside153.peopleinside.service.mediacontent.MediaContentService
