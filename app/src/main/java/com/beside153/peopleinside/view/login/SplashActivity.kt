@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.activity.viewModels
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseActivity
@@ -50,21 +48,17 @@ class SplashActivity : BaseActivity() {
                 SplashEvent.NoUserInfo -> showNoUserInfoDialog()
                 is SplashEvent.OnBoardingCompleted -> {
                     if (it.isCompleted) {
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            if (it.user.userId == 1 || it.user.nickname.isEmpty()) {
-                                startActivity(LoginActivity.newIntent(this))
-                                finish()
-                                return@postDelayed
-                            }
-                            startActivity(MainActivity.newIntent(this, false))
+                        if (it.user.userId == 1 || it.user.nickname.isEmpty()) {
+                            startActivity(LoginActivity.newIntent(this))
                             finish()
-                        }, SPLASH_DURATION)
+                            return@eventObserve
+                        }
+                        startActivity(MainActivity.newIntent(this, false))
+                        finish()
                         return@eventObserve
                     }
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        startActivity(SignUpActivity.newIntent(this, ON_BOARDING))
-                        finish()
-                    }, SPLASH_DURATION)
+                    startActivity(SignUpActivity.newIntent(this, ON_BOARDING))
+                    finish()
                 }
             }
         }
@@ -99,7 +93,6 @@ class SplashActivity : BaseActivity() {
     }
 
     companion object {
-        private const val SPLASH_DURATION = 1500L
         private const val ON_BOARDING = "on boarding not completed"
     }
 }
