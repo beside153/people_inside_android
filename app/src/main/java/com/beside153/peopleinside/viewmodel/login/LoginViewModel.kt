@@ -39,7 +39,7 @@ class LoginViewModel @Inject constructor(
         _loginEvent.value = Event(LoginEvent.KakaoLoginClick)
     }
 
-    fun peopleInsideLogin(email: String) {
+    fun login(email: String) {
         val ceh = CoroutineExceptionHandler { context, t ->
             when (t) {
                 is ApiException -> {

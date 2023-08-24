@@ -130,7 +130,7 @@ class NonMemberLoginActivity : BaseActivity() {
                 showToast(R.string.kakao_user_info_load_failed)
             } else if (user != null) {
                 val email = user.kakaoAccount?.email ?: ""
-                nonMemberLoginViewModel.peopleInsideLogin(email)
+                nonMemberLoginViewModel.login(email)
             }
         }
     }

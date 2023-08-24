@@ -38,7 +38,7 @@ class NonMemberLoginViewModel @Inject constructor(
         _nonMemberLoginEvent.value = Event(NonMemberLoginEvent.KakaoLoginClick)
     }
 
-    fun peopleInsideLogin(email: String) {
+    fun login(email: String) {
         val ceh = CoroutineExceptionHandler { context, t ->
             when (t) {
                 is ApiException -> {
