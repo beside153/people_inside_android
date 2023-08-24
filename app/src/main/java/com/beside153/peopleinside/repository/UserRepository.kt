@@ -27,7 +27,6 @@ class UserRepository @Inject constructor(
     init {
         // 프리퍼런스 데이터를 여기서 한번 가져와서 userFlow 갱신
         val userId = prefs.getUserId()
-        val jwtToken = prefs.getJwtToken()
         val nickname = prefs.getNickname()
         val mbti = prefs.getMbti()
         val birth = prefs.getBirth()
@@ -36,7 +35,7 @@ class UserRepository @Inject constructor(
 
         if (prefs.getIsMember()) {
             // 지금 앱에 회원상태로 되어있으면 유저정보 업데이트
-            val user = User(userId, jwtToken, nickname, mbti, birth, gender, email, isMember = true)
+            val user = User(userId, nickname, mbti, birth, gender, email, isMember = true)
             updateUser(user)
         } else {
             // 비회원(게스트) 상태일 경우, 게스트 유저정보로 업데이트
@@ -49,7 +48,7 @@ class UserRepository @Inject constructor(
     }
 
     fun updateUserToGuest(mbti: String) {
-        val guestUser = User(guestUserId, guestUserJwtToken, "익명의 핍사이더", mbti, "", "", isMember = false)
+        val guestUser = User(guestUserId, "익명의 핍사이더", mbti, "", "", isMember = false)
         _userFlow.tryEmit(guestUser)
 
         // TODO: 앱 전체 userRepository로 수정 후 아래 코드를 삭제
@@ -81,7 +80,7 @@ class UserRepository @Inject constructor(
         prefs.setEmail(email)
         prefs.setIsMember(true)
 
-        val user = User(userId, jwtToken, nickname, mbti, birth, gender, email, isMember = true)
+        val user = User(userId, nickname, mbti, birth, gender, email, isMember = true)
         updateUser(user)
 
         return user
@@ -117,7 +116,7 @@ class UserRepository @Inject constructor(
         prefs.setGender(userInfo.sex)
         prefs.setIsMember(true)
 
-        val user = User(userId, jwtToken, nickname, mbti, birth, gender, email, isMember = true)
+        val user = User(userId, nickname, mbti, birth, gender, email, isMember = true)
         updateUser(user)
 
         return user

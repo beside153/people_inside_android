@@ -51,7 +51,7 @@ class SplashActivity : BaseActivity() {
                 is SplashEvent.OnBoardingCompleted -> {
                     if (it.isCompleted) {
                         Handler(Looper.getMainLooper()).postDelayed({
-                            if (it.user.userId == 0 || it.user.nickname.isEmpty()) {
+                            if (it.user.userId == 1 || it.user.nickname.isEmpty()) {
                                 startActivity(LoginActivity.newIntent(this))
                                 finish()
                                 return@postDelayed

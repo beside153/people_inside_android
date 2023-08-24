@@ -69,7 +69,7 @@ class SplashViewModel @Inject constructor(
         }
         viewModelScope.launch(ceh) {
             val allReportList = reportService.getReportList()
-            if (user.jwtToken.isNotEmpty()) {
+            if (prefs.getJwtToken().isNotEmpty()) {
                 requiredAppVersion = appVersionService.getAppVersionLatest("android").requiredVersionName
             }
 
