@@ -17,7 +17,7 @@ import javax.inject.Inject
 sealed interface SignUpUserInfoEvent {
     object BirthYearClick : SignUpUserInfoEvent
     object MbtiChoiceClick : SignUpUserInfoEvent
-    data class SignUpButtonClick(val user: User) : SignUpUserInfoEvent
+    data class SignUpSuccess(val user: User) : SignUpUserInfoEvent
 }
 
 @HiltViewModel
@@ -115,7 +115,7 @@ class SignUpUserInfoViewModel @Inject constructor(
             val gender = _selectedGender.value ?: ""
 
             val user = userRepository.postAuthRegister(authToken, nickname, mbti, birth, gender)
-            _signUpUserInfoEvent.value = Event(SignUpUserInfoEvent.SignUpButtonClick(user))
+            _signUpUserInfoEvent.value = Event(SignUpUserInfoEvent.SignUpSuccess(user))
         }
     }
 

@@ -82,7 +82,7 @@ class SignUpUserInfoFragment : BaseFragment() {
                     findNavController().navigate(action)
                 }
 
-                is SignUpUserInfoEvent.SignUpButtonClick -> {
+                is SignUpUserInfoEvent.SignUpSuccess -> {
                     firebaseAnalytics.logEvent("회원가입") {
                         param("유저_ID", it.user.userId.toString())
                         param("유저명", it.user.nickname)
