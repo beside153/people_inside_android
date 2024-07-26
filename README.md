@@ -1,7 +1,8 @@
 # 피플인사이드 (People Inside)
 
-- GitHub : https://github.com/PeopleInsideTeam/people_inside_android
 - PlayStore : https://play.google.com/store/apps/details?id=com.beside153.peopleinside
+
+  - 현재 서버 기한 만료로 앱 정상작동하지 않음
 
 <br>
 
@@ -14,6 +15,7 @@ MBTI 기반 영화 및 드라마 콘텐츠를 추천해주는 앱 서비스입�
 # ⭐️ 개발한 기능
 
 - **안드로이드 앱 전체 개발**
+  
     - MBTI 기반으로 추천하는 콘텐츠 표시 (홈 화면)
     - 콘텐츠 검색
     - 콘텐츠 별점 남기기 및 감상 작성
