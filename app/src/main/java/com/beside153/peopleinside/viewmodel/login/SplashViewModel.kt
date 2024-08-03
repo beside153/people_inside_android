@@ -3,17 +3,21 @@ package com.beside153.peopleinside.viewmodel.login
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.BuildConfig
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
+import com.beside153.peopleinside.model.common.User
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.AppVersionService
 import com.beside153.peopleinside.service.ReportService
 import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.util.Event
+import com.beside153.peopleinside.util.PreferenceUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -23,20 +27,29 @@ sealed interface SplashEvent {
     object UpdateApp : SplashEvent
     object GoToPlayStore : SplashEvent
     object NoUserInfo : SplashEvent
-    data class OnBoardingCompleted(val isCompleted: Boolean) : SplashEvent
+    data class OnBoardingCompleted(val isOnBoardingCompleted: Boolean, val isMember: Boolean) : SplashEvent
 }
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val appVersionService: AppVersionService,
     private val reportService: ReportService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val userRepository: UserRepository,
+    private val prefs: PreferenceUtil
 ) : BaseViewModel() {
 
     private val _splashEvent = MutableLiveData<Event<SplashEvent>>()
     val splashEvent: LiveData<Event<SplashEvent>> = _splashEvent
 
     private var requiredAppVersion = BuildConfig.VERSION_NAME
+    private lateinit var user: User
+
+    init {
+        viewModelScope.launch(Dispatchers.Default) {
+            userRepository.userFlow.collectLatest { user = it }
+        }
+    }
 
     fun getAllData() {
         val ceh = CoroutineExceptionHandler { context, t ->
@@ -56,7 +69,7 @@ class SplashViewModel @Inject constructor(
         }
         viewModelScope.launch(ceh) {
             val allReportList = reportService.getReportList()
-            if (App.prefs.getJwtToken().isNotEmpty()) {
+            if (prefs.getJwtToken().isNotEmpty()) {
                 requiredAppVersion = appVersionService.getAppVersionLatest("android").requiredVersionName
             }
 
@@ -67,18 +80,18 @@ class SplashViewModel @Inject constructor(
             }
 
             var onBoardingCompleted = true
-            if (App.prefs.getUserId() != 0 && App.prefs.getIsMember()) {
-                val onBoardingDeferred = async { userService.getOnBoardingCompleted(App.prefs.getUserId()) }
+            if (user.userId != 0 && user.isMember) {
+                val onBoardingDeferred = async { userService.getOnBoardingCompleted(user.userId) }
                 onBoardingCompleted = onBoardingDeferred.await()
             }
 
-            App.prefs.setReportList(Json.encodeToString(allReportList))
+            prefs.setReportList(Json.encodeToString(allReportList))
 
             if (onBoardingCompleted) {
-                _splashEvent.value = Event(SplashEvent.OnBoardingCompleted(true))
+                _splashEvent.value = Event(SplashEvent.OnBoardingCompleted(true, user.isMember))
                 return@launch
             }
-            _splashEvent.value = Event(SplashEvent.OnBoardingCompleted(false))
+            _splashEvent.value = Event(SplashEvent.OnBoardingCompleted(false, user.isMember))
         }
     }
 

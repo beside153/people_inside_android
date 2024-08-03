@@ -5,10 +5,17 @@ import androidx.lifecycle.MutableLiveData
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.model.common.MbtiModel
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.util.Event
 import com.beside153.peopleinside.view.common.MbtiChoiceScreenAdapter.MbtiScreenModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class NonMemberMbtiChoiceViewModel : BaseViewModel() {
+@HiltViewModel
+class NonMemberMbtiChoiceViewModel @Inject constructor(
+    private val userRepository: UserRepository
+) : BaseViewModel() {
+
     private val _completeButtonClickEvent = MutableLiveData<Event<String>>()
     val completeButtonClickEvent: LiveData<Event<String>> get() = _completeButtonClickEvent
 
@@ -68,6 +75,8 @@ class NonMemberMbtiChoiceViewModel : BaseViewModel() {
     }
 
     fun onCompleteButtonClick() {
-        _completeButtonClickEvent.value = Event(selectedMbtiItem?.mbtiText ?: "INFP")
+        val mbti = (selectedMbtiItem?.mbtiText ?: "INFP").uppercase()
+        userRepository.updateUserToGuest(mbti)
+        _completeButtonClickEvent.value = Event(mbti)
     }
 }

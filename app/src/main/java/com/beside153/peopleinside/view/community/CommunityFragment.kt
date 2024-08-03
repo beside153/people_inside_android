@@ -11,7 +11,6 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseFragment
 import com.beside153.peopleinside.common.extension.eventObserve
@@ -79,8 +78,8 @@ class CommunityFragment : BaseFragment() {
                     startActivity(CommunitySearchActivity.newIntent(requireActivity()))
                 }
 
-                CommunityEvent.WritePostClick -> {
-                    if (App.prefs.getIsMember()) {
+                is CommunityEvent.WritePostClick -> {
+                    if (it.isMember) {
                         activityLauncher.launch(CreatePostActivity.newIntent(requireActivity()))
                         requireActivity().setOpenActivityAnimation()
                         return@eventObserve

@@ -6,15 +6,19 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.beside153.peopleinside.base.BaseViewModel
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.model.mediacontent.Pick10Model
 import com.beside153.peopleinside.model.mediacontent.RatingBattleModel
 import com.beside153.peopleinside.model.mediacontent.SubRankingModel
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.mediacontent.BookmarkService
 import com.beside153.peopleinside.service.mediacontent.MediaContentService
 import com.beside153.peopleinside.util.Event
 import com.beside153.peopleinside.view.recommend.Pick10ViewPagerAdapter.Pick10ViewPagerModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,12 +31,15 @@ sealed interface RecommendEvent {
     data class SubRankingItemClick(val item: SubRankingModel) : RecommendEvent
     object MbtiImgClick : RecommendEvent
     object RefreshPick10Click : RecommendEvent
+    object GuestLogin : RecommendEvent
+    data class GoToWriteReviewClick(val contentId: Int) : RecommendEvent
 }
 
 @HiltViewModel
 class RecommendViewModel @Inject constructor(
     private val mediaContentService: MediaContentService,
-    private val bookmarkService: BookmarkService
+    private val bookmarkService: BookmarkService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     private val _progressBarVisible = MutableLiveData(true)
@@ -64,6 +71,13 @@ class RecommendViewModel @Inject constructor(
 
     private var pick10PageCount = 1
     private var pick10List = listOf<Pick10Model>()
+    private lateinit var user: User
+
+    init {
+        viewModelScope.launch(Dispatchers.Default) {
+            userRepository.userFlow.collectLatest { user = it }
+        }
+    }
 
     fun initAllData() {
         viewModelScope.launch(exceptionHandler) {
@@ -88,6 +102,10 @@ class RecommendViewModel @Inject constructor(
     }
 
     fun onMbtiImgClick() {
+        if (!user.isMember) {
+            _recommendEvent.value = Event(RecommendEvent.GuestLogin)
+            return
+        }
         _recommendEvent.value = Event(RecommendEvent.MbtiImgClick)
     }
 
@@ -104,6 +122,11 @@ class RecommendViewModel @Inject constructor(
     }
 
     fun onBookmarkClick(item: Pick10Model) {
+        if (!user.isMember) {
+            _recommendEvent.value = Event(RecommendEvent.GuestLogin)
+            return
+        }
+
         viewModelScope.launch(exceptionHandler) {
             bookmarkService.postBookmarkStatus(item.contentId)
 
@@ -129,6 +152,15 @@ class RecommendViewModel @Inject constructor(
             *pick10List.map { Pick10ViewPagerModel.Pick10Item(it) }.toTypedArray(),
             Pick10ViewPagerModel.RefreshView
         )
+    }
+
+    fun onGoToWriteReviewClick(item: Pick10Model) {
+        if (!user.isMember) {
+            _recommendEvent.value = Event(RecommendEvent.GuestLogin)
+            return
+        }
+
+        _recommendEvent.value = Event(RecommendEvent.GoToWriteReviewClick(item.contentId))
     }
 
     fun onPick10ItemClick(item: Pick10Model) {

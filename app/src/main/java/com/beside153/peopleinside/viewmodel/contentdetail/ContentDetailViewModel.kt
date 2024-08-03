@@ -3,14 +3,15 @@ package com.beside153.peopleinside.viewmodel.contentdetail
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.model.mediacontent.ContentDetailModel
 import com.beside153.peopleinside.model.mediacontent.rating.ContentRatingModel
 import com.beside153.peopleinside.model.mediacontent.rating.ContentRatingRequest
 import com.beside153.peopleinside.model.mediacontent.review.ContentCommentModel
 import com.beside153.peopleinside.model.mediacontent.review.ContentReviewModel
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.mediacontent.BookmarkService
 import com.beside153.peopleinside.service.mediacontent.MediaContentService
 import com.beside153.peopleinside.service.mediacontent.RatingService
@@ -20,7 +21,9 @@ import com.beside153.peopleinside.util.roundToHalf
 import com.beside153.peopleinside.view.contentdetail.ContentDetailScreenAdapter.ContentDetailScreenModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,7 +32,8 @@ sealed interface ContentDetailEvent {
     object VerticalDotsClick : ContentDetailEvent
     data class CreateReview(val contentId: Int, val content: String) : ContentDetailEvent
     data class ReportSuccess(val isSuccess: Boolean) : ContentDetailEvent
-    data class CreateRating(val item: ContentRatingModel) : ContentDetailEvent
+    data class CreateRating(val item: ContentRatingModel, val user: User) : ContentDetailEvent
+    object GuestLogin : ContentDetailEvent
 }
 
 @HiltViewModel
@@ -37,7 +41,8 @@ class ContentDetailViewModel @Inject constructor(
     private val mediaContentService: MediaContentService,
     private val ratingService: RatingService,
     private val reviewService: ReviewService,
-    private val bookmarkService: BookmarkService
+    private val bookmarkService: BookmarkService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     private val _contentDetailItem = MutableLiveData<ContentDetailModel>()
@@ -60,6 +65,14 @@ class ContentDetailViewModel @Inject constructor(
     private var writerReviewItem = ContentReviewModel(0, 0, "", 0, null)
     private var commentList = listOf<ContentCommentModel>()
 
+    private lateinit var user: User
+
+    init {
+        viewModelScope.launch(Dispatchers.Default) {
+            userRepository.userFlow.collectLatest { user = it }
+        }
+    }
+
     fun setContentId(id: Int) {
         contentId = id
     }
@@ -78,11 +91,20 @@ class ContentDetailViewModel @Inject constructor(
     }
 
     fun onVerticalDotsClick(item: ContentCommentModel) {
+        if (!user.isMember) {
+            _contentDetailEvent.value = Event(ContentDetailEvent.GuestLogin)
+            return
+        }
         _contentDetailEvent.value = Event(ContentDetailEvent.VerticalDotsClick)
         commentIdForReport = item.reviewId
     }
 
     fun onCommentLikeClick(item: ContentCommentModel) {
+        if (!user.isMember) {
+            _contentDetailEvent.value = Event(ContentDetailEvent.GuestLogin)
+            return
+        }
+
         viewModelScope.launch(exceptionHandler) {
             val updatedList: List<ContentCommentModel>?
             if (item.like) {
@@ -171,7 +193,7 @@ class ContentDetailViewModel @Inject constructor(
             }
         }
         viewModelScope.launch(ceh) {
-            writerReviewItem = reviewService.getWriterReview(contentId, App.prefs.getUserId())
+            writerReviewItem = reviewService.getWriterReview(contentId, user.userId)
             writerHasReview = true
         }
     }
@@ -193,7 +215,7 @@ class ContentDetailViewModel @Inject constructor(
             }
         }
         viewModelScope.launch(ceh) {
-            contentRatingItem = ratingService.getContentRating(contentId, App.prefs.getUserId())
+            contentRatingItem = ratingService.getContentRating(contentId, user.userId)
             currentRating = contentRatingItem.rating
             currentRatingId = contentRatingItem.ratingId
         }
@@ -208,7 +230,7 @@ class ContentDetailViewModel @Inject constructor(
                     ratingService.postContentRating(contentId, ContentRatingRequest(rating))
                 currentRating = rating
                 currentRatingId = contentRatingItem.ratingId
-                _contentDetailEvent.value = Event(ContentDetailEvent.CreateRating(contentRatingItem))
+                _contentDetailEvent.value = Event(ContentDetailEvent.CreateRating(contentRatingItem, user))
                 return@launch
             }
             val currentRatingHasValue = 0 < currentRating && currentRating <= MAX_RATING
@@ -225,6 +247,10 @@ class ContentDetailViewModel @Inject constructor(
     }
 
     fun onBookmarkClick() {
+        if (!user.isMember) {
+            _contentDetailEvent.value = Event(ContentDetailEvent.GuestLogin)
+            return
+        }
         bookmarked = bookmarked == false
         viewModelScope.launch(exceptionHandler) {
             initRating()
@@ -251,6 +277,10 @@ class ContentDetailViewModel @Inject constructor(
     }
 
     fun onCreateReviewClick() {
+        if (!user.isMember) {
+            _contentDetailEvent.value = Event(ContentDetailEvent.GuestLogin)
+            return
+        }
         if (!writerHasReview) {
             _contentDetailEvent.value = Event(ContentDetailEvent.CreateReview(contentId, ""))
         } else {

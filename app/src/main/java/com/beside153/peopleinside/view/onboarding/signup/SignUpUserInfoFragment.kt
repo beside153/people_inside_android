@@ -8,7 +8,6 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseFragment
 import com.beside153.peopleinside.common.extension.eventObserve
@@ -83,11 +82,11 @@ class SignUpUserInfoFragment : BaseFragment() {
                     findNavController().navigate(action)
                 }
 
-                SignUpUserInfoEvent.SignUpButtonClick -> {
+                is SignUpUserInfoEvent.SignUpSuccess -> {
                     firebaseAnalytics.logEvent("회원가입") {
-                        param("유저_ID", App.prefs.getUserId().toString())
-                        param("유저명", App.prefs.getNickname())
-                        param("유저_MBTI", App.prefs.getMbti())
+                        param("유저_ID", it.user.userId.toString())
+                        param("유저명", it.user.nickname)
+                        param("유저_MBTI", it.user.mbti)
                         param("소셜로그인_경로", "KAKAO")
                     }
 

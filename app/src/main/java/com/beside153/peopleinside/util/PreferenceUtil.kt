@@ -4,21 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class PreferenceUtil @Inject constructor(
     @ApplicationContext context: Context
 ) {
-    private val jwtTokenKey = "JWT_TOKEN"
-    private val userIdKey = "USER_ID"
-    private val userMbtiKey = "USER_MBTI"
-    private val userNicknameKey = "USER_NICKNAME"
-    private val userGenderKey = "USER_GENDER"
-    private val userBirthKey = "USER_BIRTH"
-    private val reportListKey = "REPORT_LIST"
-    private val isMemberKey = "IS_MEMBER"
-    private val emailKey = "EMAIL"
-    private val recentSearchKey = "RECENT_SEARCH_LIST"
-
     private val prefs: SharedPreferences =
         context.getSharedPreferences("prefs_name", Context.MODE_PRIVATE)
 
@@ -100,5 +91,18 @@ class PreferenceUtil @Inject constructor(
 
     fun getRecentSearchList(): List<String> {
         return prefs.getStringSet(recentSearchKey, setOf())?.toList() ?: listOf()
+    }
+
+    companion object {
+        private const val jwtTokenKey = "JWT_TOKEN"
+        private const val userIdKey = "USER_ID"
+        private const val userMbtiKey = "USER_MBTI"
+        private const val userNicknameKey = "USER_NICKNAME"
+        private const val userGenderKey = "USER_GENDER"
+        private const val userBirthKey = "USER_BIRTH"
+        private const val reportListKey = "REPORT_LIST"
+        private const val isMemberKey = "IS_MEMBER"
+        private const val emailKey = "EMAIL"
+        private const val recentSearchKey = "RECENT_SEARCH_LIST"
     }
 }

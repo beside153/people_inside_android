@@ -6,11 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.model.editprofile.EdittedUserInfo
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,7 +26,8 @@ sealed interface EditProfileEvent {
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
-    private val userService: UserService
+    private val userService: UserService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     val nickname = MutableLiveData("")
@@ -50,6 +55,14 @@ class EditProfileViewModel @Inject constructor(
 
     private val _editProfileEvent = MutableLiveData<Event<EditProfileEvent>>()
     val editProfileEvent: LiveData<Event<EditProfileEvent>> = _editProfileEvent
+
+    private lateinit var user: User
+
+    init {
+        viewModelScope.launch(Dispatchers.Default) {
+            userRepository.userFlow.collectLatest { user = it }
+        }
+    }
 
     fun onNicknameTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
         nickname.value = (s ?: "").toString()
@@ -115,7 +128,7 @@ class EditProfileViewModel @Inject constructor(
             }
 
             userService.patchUserInfo(
-                App.prefs.getUserId(),
+                user.userId,
                 EdittedUserInfo(
                     nickname.value ?: "",
                     _selectedMbti.value ?: "",
@@ -124,6 +137,16 @@ class EditProfileViewModel @Inject constructor(
                 )
             )
 
+            userRepository.updateUser(
+                user.copy(
+                    nickname = nickname.value ?: "",
+                    mbti = _selectedMbti.value ?: "",
+                    birth = _selectedYear.value.toString(),
+                    gender = _selectedGender.value ?: ""
+                )
+            )
+
+            // TODO: 앱 전체 userRepository로 수정 후 아래 코드를 삭제
             App.prefs.setNickname(nickname.value ?: "")
             App.prefs.setMbti(_selectedMbti.value ?: "")
             App.prefs.setBirth(_selectedYear.value.toString())

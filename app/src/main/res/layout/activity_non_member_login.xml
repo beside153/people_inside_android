@@ -8,10 +8,6 @@
         <variable
             name="viewModel"
             type="com.beside153.peopleinside.viewmodel.login.nonmember.NonMemberLoginViewModel" />
-
-        <variable
-            name="app"
-            type="com.beside153.peopleinside.App" />
     </data>
 
     <ScrollView

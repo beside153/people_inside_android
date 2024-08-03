@@ -4,18 +4,19 @@ import android.text.Editable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.model.community.post.CommunityPostModel
 import com.beside153.peopleinside.service.community.CommunityPostService
 import com.beside153.peopleinside.util.Event
+import com.beside153.peopleinside.util.PreferenceUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CommunitySearchViewModel @Inject constructor(
-    private val communityPostService: CommunityPostService
+    private val communityPostService: CommunityPostService,
+    private val prefs: PreferenceUtil
 ) : BaseViewModel() {
 
     private val _keyword = MutableLiveData("")
@@ -42,7 +43,7 @@ class CommunitySearchViewModel @Inject constructor(
     private var page = 1
 
     fun initSearchWordList() {
-        _searchWordList.value = App.prefs.getRecentSearchList().toMutableList()
+        _searchWordList.value = prefs.getRecentSearchList().toMutableList()
         checkHasSearchWord()
     }
 
@@ -80,13 +81,13 @@ class CommunitySearchViewModel @Inject constructor(
             tempList.removeAt(tempList.size - 1)
         }
         tempList.add(0, word)
-        App.prefs.setRecentSearchList(tempList.toList())
+        prefs.setRecentSearchList(tempList.toList())
         _searchWordList.value = tempList
         checkHasSearchWord()
     }
 
     fun deleteAllSearchWord() {
-        App.prefs.setRecentSearchList(listOf())
+        prefs.setRecentSearchList(listOf())
         _searchWordList.value = listOf()
         checkHasSearchWord()
     }

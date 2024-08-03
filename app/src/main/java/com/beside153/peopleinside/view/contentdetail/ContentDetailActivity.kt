@@ -11,7 +11,6 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseActivity
 import com.beside153.peopleinside.common.extension.eventObserve
@@ -147,11 +146,15 @@ class ContentDetailActivity : BaseActivity() {
 
                 is ContentDetailEvent.CreateRating -> {
                     firebaseAnalytics.logEvent("평가작성") {
-                        param("유저_ID", App.prefs.getUserId().toString())
-                        param("유저_MBTI", App.prefs.getMbti())
+                        param("유저_ID", it.user.userId.toString())
+                        param("유저_MBTI", it.user.mbti)
                         param("콘텐츠_ID", it.item.contentId.toString())
                         param("별점", it.item.rating.toString())
                     }
+                }
+
+                ContentDetailEvent.GuestLogin -> {
+                    goToNonMemberLoginAcitivity()
                 }
             }
         }
@@ -167,34 +170,18 @@ class ContentDetailActivity : BaseActivity() {
     }
 
     private fun onBookmarkClick() {
-        if (!App.prefs.getIsMember()) {
-            goToNonMemberLoginAcitivity()
-            return
-        }
         contentDetailViewModel.onBookmarkClick()
     }
 
     private fun onCreateReviewClick() {
-        if (!App.prefs.getIsMember()) {
-            goToNonMemberLoginAcitivity()
-            return
-        }
         contentDetailViewModel.onCreateReviewClick()
     }
 
     private fun onVerticalDotsClick(item: ContentCommentModel) {
-        if (!App.prefs.getIsMember()) {
-            goToNonMemberLoginAcitivity()
-            return
-        }
         contentDetailViewModel.onVerticalDotsClick(item)
     }
 
     private fun onCommentLikeClick(item: ContentCommentModel) {
-        if (!App.prefs.getIsMember()) {
-            goToNonMemberLoginAcitivity()
-            return
-        }
         contentDetailViewModel.onCommentLikeClick(item)
     }
 

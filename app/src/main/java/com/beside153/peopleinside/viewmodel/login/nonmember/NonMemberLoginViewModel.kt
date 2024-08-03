@@ -3,10 +3,9 @@ package com.beside153.peopleinside.viewmodel.login.nonmember
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
 import com.beside153.peopleinside.common.exception.ApiException
-import com.beside153.peopleinside.service.AuthService
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,8 +21,8 @@ sealed interface NonMemberLoginEvent {
 
 @HiltViewModel
 class NonMemberLoginViewModel @Inject constructor(
-    private val authService: AuthService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     private val _nonMemberLoginEvent = MutableLiveData<Event<NonMemberLoginEvent>>()
@@ -39,7 +38,7 @@ class NonMemberLoginViewModel @Inject constructor(
         _nonMemberLoginEvent.value = Event(NonMemberLoginEvent.KakaoLoginClick)
     }
 
-    fun peopleInsideLogin() {
+    fun login(email: String) {
         val ceh = CoroutineExceptionHandler { context, t ->
             when (t) {
                 is ApiException -> {
@@ -55,20 +54,8 @@ class NonMemberLoginViewModel @Inject constructor(
         }
 
         viewModelScope.launch(ceh) {
-            val response = authService.postLoginKakao("Bearer $authToken")
-            val jwtToken = response.jwtToken
-            val user = response.user
-
-            App.prefs.setJwtToken(jwtToken)
-            App.prefs.setUserId(user.userId)
-            App.prefs.setNickname(user.nickname)
-            App.prefs.setMbti(user.mbti)
-            App.prefs.setBirth(user.birth)
-            App.prefs.setGender(user.sex)
-            App.prefs.setIsMember(true)
-
+            val user = userRepository.loginWithKakao(authToken, email)
             val onBoardingCompleted = userService.getOnBoardingCompleted(user.userId)
-
             if (onBoardingCompleted) {
                 _nonMemberLoginEvent.value = Event(NonMemberLoginEvent.OnBoardingCompleted(true))
             } else {

@@ -4,10 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.activity.viewModels
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.R
 import com.beside153.peopleinside.base.BaseActivity
 import com.beside153.peopleinside.common.extension.eventObserve
@@ -42,6 +39,7 @@ class SplashActivity : BaseActivity() {
         splashViewModel.splashEvent.eventObserve(this) {
             when (it) {
                 SplashEvent.UpdateApp -> showNeedUpdateDialog()
+
                 SplashEvent.GoToPlayStore -> {
                     val intent = Intent(Intent.ACTION_VIEW)
                     intent.data = Uri.parse("https://play.google.com/store/apps/details?id=com.beside153.peopleinside")
@@ -49,23 +47,20 @@ class SplashActivity : BaseActivity() {
                 }
 
                 SplashEvent.NoUserInfo -> showNoUserInfoDialog()
+
                 is SplashEvent.OnBoardingCompleted -> {
-                    if (it.isCompleted) {
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            if (App.prefs.getUserId() == 0 || App.prefs.getNickname().isEmpty()) {
-                                startActivity(LoginActivity.newIntent(this))
-                                finish()
-                                return@postDelayed
-                            }
-                            startActivity(MainActivity.newIntent(this, false))
+                    if (it.isOnBoardingCompleted) {
+                        if (it.isMember) {
+                            startActivity(LoginActivity.newIntent(this))
                             finish()
-                        }, SPLASH_DURATION)
+                            return@eventObserve
+                        }
+                        startActivity(MainActivity.newIntent(this, false))
+                        finish()
                         return@eventObserve
                     }
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        startActivity(SignUpActivity.newIntent(this, ON_BOARDING))
-                        finish()
-                    }, SPLASH_DURATION)
+                    startActivity(SignUpActivity.newIntent(this, ON_BOARDING))
+                    finish()
                 }
             }
         }
@@ -100,7 +95,6 @@ class SplashActivity : BaseActivity() {
     }
 
     companion object {
-        private const val SPLASH_DURATION = 1500L
         private const val ON_BOARDING = "on boarding not completed"
     }
 }

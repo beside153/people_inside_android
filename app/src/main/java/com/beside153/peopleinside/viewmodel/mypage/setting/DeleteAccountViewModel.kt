@@ -3,21 +3,25 @@ package com.beside153.peopleinside.viewmodel.mypage.setting
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.model.user.ResonIdModel
 import com.beside153.peopleinside.model.withdrawal.WithDrawalReasonModel
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.UserService
 import com.beside153.peopleinside.service.WithDrawalService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DeleteAccountViewModel @Inject constructor(
     private val userService: UserService,
-    private val withDrawalService: WithDrawalService
+    private val withDrawalService: WithDrawalService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     private val _checkedAgreeDelete = MutableLiveData(false)
@@ -33,6 +37,13 @@ class DeleteAccountViewModel @Inject constructor(
     val withDrawalReasonList: LiveData<List<WithDrawalReasonModel>> get() = _withDrawalReasonList
 
     private var checkedReasonId = INITIAL_REASON_ID
+    private lateinit var user: User
+
+    init {
+        viewModelScope.launch(Dispatchers.Default) {
+            userRepository.userFlow.collectLatest { user = it }
+        }
+    }
 
     fun initReasonList() {
         viewModelScope.launch(exceptionHandler) {
@@ -58,10 +69,8 @@ class DeleteAccountViewModel @Inject constructor(
 
     fun deleteAccount() {
         viewModelScope.launch(exceptionHandler) {
-            userService.deleteUser(App.prefs.getUserId(), ResonIdModel(checkedReasonId))
-            App.prefs.setUserId(0)
-            App.prefs.setNickname("")
-            App.prefs.setIsMember(false)
+            userService.deleteUser(user.userId, ResonIdModel(checkedReasonId))
+            userRepository.updateUser(user.copy(userId = 0, nickname = "", isMember = false))
             _deleteAccountSuccessEvent.value = Event(Unit)
         }
     }

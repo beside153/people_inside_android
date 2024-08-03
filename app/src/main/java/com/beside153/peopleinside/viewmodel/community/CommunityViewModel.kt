@@ -3,24 +3,28 @@ package com.beside153.peopleinside.viewmodel.community
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.beside153.peopleinside.App
 import com.beside153.peopleinside.base.BaseViewModel
+import com.beside153.peopleinside.model.common.User
 import com.beside153.peopleinside.model.community.post.CommunityPostModel
+import com.beside153.peopleinside.repository.UserRepository
 import com.beside153.peopleinside.service.community.CommunityPostService
 import com.beside153.peopleinside.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed interface CommunityEvent {
     object SearchBarClick : CommunityEvent
-    object WritePostClick : CommunityEvent
+    data class WritePostClick(val isMember: Boolean) : CommunityEvent
     data class PostItemClick(val postId: Long) : CommunityEvent
 }
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
-    private val communityPostService: CommunityPostService
+    private val communityPostService: CommunityPostService,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
     private val _postList = MutableLiveData<List<CommunityPostModel>>()
     val postList: LiveData<List<CommunityPostModel>> get() = _postList
@@ -29,13 +33,20 @@ class CommunityViewModel @Inject constructor(
     val communityEvent: LiveData<Event<CommunityEvent>> get() = _communityEvent
 
     private var page = 1
+    private lateinit var user: User
+
+    init {
+        viewModelScope.launch(Dispatchers.Default) {
+            userRepository.userFlow.collectLatest { user = it }
+        }
+    }
 
     fun initPostList() {
         var allPostList = listOf<CommunityPostModel>()
         viewModelScope.launch(exceptionHandler) {
             (1..page).forEach {
                 val tempList = communityPostService.getCommunityPostList(it)
-                val userMbti = App.prefs.getMbti().lowercase()
+                val userMbti = user.mbti.lowercase()
 
                 val updatedList = tempList.map { item ->
                     if (item.mbtiList.contains(userMbti)) {
@@ -66,7 +77,7 @@ class CommunityViewModel @Inject constructor(
     }
 
     fun onWritePostClick() {
-        _communityEvent.value = Event(CommunityEvent.WritePostClick)
+        _communityEvent.value = Event(CommunityEvent.WritePostClick(user.isMember))
     }
 
     fun onPostItemClick(item: CommunityPostModel) {
